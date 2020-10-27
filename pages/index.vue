@@ -1,72 +1,105 @@
 <template>
 
-  <v-container class="pt-0">
+  <v-container class="pa-0">
+    <template v-if="loader" class="mt-4">
+      <v-row class="my-4">
+        <template v-for="i in 36">
+          <v-skeleton-loader
+                  class="mx-auto"
+                  min-width="210"
+                  max-width="280"
+                  height="280"
+                  type="card"
+          ></v-skeleton-loader>
+        </template>
+      </v-row>
+    </template>
 
-    <v-row>
+    <template v-else>
 
-      <LeftPanel/>
+      <v-row v-if="cars.length > 0">
 
-      <v-col md="10" class="px-0">
+        <template v-for="(car, index) in cars">
 
-        <v-container grey lighten-4 id="contentStart">
+          <Product :carDetails="car" :key="`car-${index}`" />
 
-          <v-card>
+        </template>
 
-            <v-row>
+      </v-row>
 
-              <CenterLeft/>
+      <v-row justify="center" align="center" v-else>
 
-              <CenterRight/>
+        <div class="my-8">
+          No result found.
+        </div>
 
-            </v-row>
+      </v-row>
 
-          </v-card>
+    </template>
 
-          <Products/>
 
-          <Pagination/>
 
-        </v-container>
-
-      </v-col>
-
+    <v-row align="center" justify="center" v-if="cars.length > 0">
+      <Pagination/>
     </v-row>
 
   </v-container>
 
+
+
+
 </template>
 
 <script>
-  import LeftPanel from '~/components/landing/LeftFilterPanel'
-  import CenterRight from '~/components/landing/CenterRight'
-  import CenterLeft from '~/components/landing/CenterLeft'
-  import Products from '~/components/landing/Products'
-  import Pagination from '~/components/landing/Pagination'
+    import {mapGetters} from 'vuex'
+    // import Products from '~/components/landing/Products'
+    import Product from '~/components/landing/Product'
+    import Pagination from '~/components/landing/Pagination'
 
-  export default {
-    name: 'LandingPage',
+    export default {
+        name: 'LandingPage',
 
-    layout: 'landing',
+        layout: 'landing',
 
-    auth: false,
+        auth: false,
 
-    components: {
-      LeftPanel,
-      CenterLeft,
-      CenterRight,
-      Products,
-      Pagination
-    },
+        components: {
+            Product,
+            Pagination
+        },
 
-    data: () => ({
+        data: () => ({
 
-    }),
+        }),
 
-    async middleware({ store, redirect }) {
-      await store.dispatch('cars/fetchCars')
+        computed: {
+            ...mapGetters({
+                cars: 'cars/getPaginatedCars',
+                loader: 'cars/getFilterLoader'
+            })
+        },
+
+        async middleware({ store, redirect }) {
+            // await store.commit('cars/SET_LOADER', true)
+            // await store.commit('cars/SET_FILTER_ACTIVE', false)
+            // await store.dispatch('cars/fetchCars')
+        },
+
+        mounted() {
+            // this.$store.commit('cars/SET_LOADER', true)
+            // this.$store.commit('cars/SET_FILTER_ACTIVE', false)
+            // this.$store.dispatch('cars/fetchCars')
+        },
+
+        // async fetch({store, params, from}) {
+        //     let isInitialPageLoad = !from
+        //     if(isInitialPageLoad) {
+        //         // await store.commit('cars/SET_LOADER', true)
+        //         await store.commit('cars/SET_FILTER_ACTIVE', false)
+        //         await store.dispatch('cars/fetchCars')
+        //     }
+        // }
+
     }
-
-
-  }
 </script>
 

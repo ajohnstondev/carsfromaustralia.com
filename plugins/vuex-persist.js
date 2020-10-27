@@ -1,9 +1,7 @@
-import VuexPersistence from 'vuex-persist'
+import createPersistedState from 'vuex-persistedstate'
 
-export default ({ store }) => {
-  window.onNuxtReady(() => {
-    new VuexPersistence({
-      key: 'persist-carsfromaustralia'
-    }).plugin(store);
-  });
+export default ({store}) => {
+  createPersistedState({
+    key: 'cars-from-australia-persisted-v1.001',
+  })(store)
 }

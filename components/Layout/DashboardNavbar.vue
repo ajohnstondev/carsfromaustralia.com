@@ -19,7 +19,7 @@
         </button>
       </div>
       <nuxt-link class="nav-logo d-none d-lg-block d-xl-block" to="/">
-        <img src="/carfromaustralia.png" />
+        <img src="/img/carfromaustralia.png" />
       </nuxt-link>
       <nuxt-link class="navbar-brand " to="/">
         Car from Australia
@@ -38,7 +38,7 @@
         <template
                 slot="title"
         >
-          <div class="photo"><img src="img/mike.jpg" /></div>
+          <div class="photo"><img src="http://demos.creative-tim.com/nuxt-black-dashboard-pro/img/icon-nuxt.svg" /></div>
           <b class="caret d-none d-lg-block d-xl-block"></b>
           <p class="d-lg-none">Log out</p>
         </template>

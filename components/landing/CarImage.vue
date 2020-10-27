@@ -1,15 +1,5 @@
 <template>
-  <v-img :src="srcUrl" :aspect-ratio="ratio" >
-    <!--<template v-slot:placeholder>-->
-      <!--<v-row-->
-              <!--class="fill-height ma-0"-->
-              <!--align="center"-->
-              <!--justify="center"-->
-      <!--&gt;-->
-        <!--<v-progress-circular indeterminate color="teal lighten-1"></v-progress-circular>-->
-      <!--</v-row>-->
-    <!--</template>-->
-  </v-img>
+  <v-img :src="imgSrc" :aspect-ratio="ratio"></v-img>
 </template>
 
 <script>

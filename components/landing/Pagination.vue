@@ -4,7 +4,7 @@
           v-model="page"
           :circle="circle"
           :disabled="disabled"
-          :length="length"
+          :length="filterActive ? filteredPages : pages"
           :next-icon="nextIcon"
           :prev-icon="prevIcon"
           :page="page"
@@ -14,6 +14,8 @@
 </template>
 
 <script>
+  import {mapGetters} from 'vuex'
+
   export default {
     name: 'LandingPagination',
 
@@ -27,6 +29,12 @@
 
     computed: {
 
+      ...mapGetters({
+        pages: 'cars/getTotalPages',
+        filteredPages: 'cars/getTotalFilteredPages',
+        filterActive: 'cars/getFilterActive'
+      }),
+
       page: {
 
         get() {
@@ -34,9 +42,14 @@
         },
 
         set(val) {
-
+          // const el = document.getElementById('ssar')
+          // this.$smoothScroll({
+          //   scrollTo: el,
+          //   duration: 1000,
+          //   offset: -50,
+          // })
           window.scrollTo(0, 120);
-          this.$store.dispatch('cars/SET_CURRENT_PAGE', val)
+          this.filterActive ? this.$store.dispatch('cars/SET_FILTERED_CURRENT_PAGE', val) : this.$store.dispatch('cars/SET_CURRENT_PAGE', val)
         }
 
       },
@@ -46,6 +59,7 @@
       },
 
       length () {
+        console.log(this.$store.state.cars.filterActive)
         return this.$store.state.cars.totalPages
       }
     }

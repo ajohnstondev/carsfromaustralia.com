@@ -38,7 +38,7 @@ export default {
   },
   router: {
     linkExactActiveClass: 'active',
-    middleware: ['auth']
+    middleware: ['auth', 'bootstrap']
   },
   /*
   ** Customize the progress-bar color
@@ -67,7 +67,7 @@ export default {
     { src: '~/plugins/world-map.js', ssr: false },
     '~/plugins/axios',
     '~/plugins/vue-lodash',
-    { src: '~/plugins/vuex-persist', ssr: false }
+    // { src: '~/plugins/vuex-persist', ssr: false },
 
   ],
   /*
@@ -76,6 +76,8 @@ export default {
   buildModules: [
     '@nuxtjs/vuetify',
   ],
+
+
   /*
   ** Nuxt.js modules
   */
