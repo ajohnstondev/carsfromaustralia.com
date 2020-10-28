@@ -13,9 +13,9 @@
                 <!--outlined-->
                 <!--@click:close="removeFilter(key)"-->
         <!--&gt;-->
-        <div class="filter-content">
+        <div class="filter-content" :key="key">
           <span v-if="key === 'odometer'">
-            milage < {{filter}}
+            milage &lt; {{filter}}
           </span>
 
           <span v-else-if="key === 'price'">
@@ -33,38 +33,38 @@
           </span>
 
           <span v-else-if="key === 'priceRange'">
-             price: {{filter}}
+             price: 
+             <span v-if="!filter.max">&gt;=</span> <span v-if="filter.min">{{filter.min}}</span> 
+             <span v-if="filter.min && filter.max">-</span> 
+             <span v-if="!filter.min">&lt;=</span> <span v-if="filter.max">{{filter.max}}</span>
           </span>
 
           <span v-else-if="key === 'yearRange'">
-             year range: {{filter}}
+             year range: 
+             <span v-if="!filter.max">&gt;=</span> <span v-if="filter.min">{{filter.min}}</span> 
+             <span v-if="filter.min && filter.max">-</span> 
+             <span v-if="!filter.min">&lt;=</span> <span v-if="filter.max">{{filter.max}}</span>
           </span>
 
           <span v-else-if="key === 'milageRange'">
-             milage: {{filter}}
+             milage: {{filter.value}}
+          </span>
+
+          <span v-else-if="key === 'body_type'">
+             type: {{filter.value}}
           </span>
 
           <span v-else>
-            {{key}} : {{filter}}
+            {{key}} : {{filter.value}}
           </span>
         </div>
 
-        <v-btn x-small class="mt-2" depressed @click="removeFilter(key)" color="error">clear <v-icon small>mdi-close</v-icon></v-btn>
         <!--</v-chip>-->
       </template>
+      <v-btn x-small class="mt-2" depressed @click="removeFilter()" color="error">clear <v-icon small>mdi-close</v-icon></v-btn>
     </div>
-
-    <v-text-field
-            flat
-            solo
-            hide-details
-            rounded
-            dense
-            prepend-inner-icon="mdi-magnify"
-            label="Search marketplace"
-            class="filter-panel-search"
-            background-color="grey lighten-4"
-    ></v-text-field>
+    
+    <SearchFilter />
 
     <v-divider class="my-2"></v-divider>
 
@@ -79,14 +79,14 @@
     <!--<ExpansionFilter title="Model" :items="brands"/>-->
 
     <RangeFilter title="Milage" :min="milage.min" :max="milage.max"></RangeFilter>
-
   </v-col>
 </template>
 
 <script>
-  import {mapGetters} from 'vuex'
+  import { mapGetters, mapActions } from 'vuex'
   import ExpansionFilter from './ExpansionFilter'
   import RangeFilter from './RangeFilter'
+  import SearchFilter from './SearchFilter'
   import {bodyTypes, brands, prices, milage, years } from '../../plugins/const'
 
   export default {
@@ -94,14 +94,21 @@
 
     components: {
       ExpansionFilter,
-      RangeFilter
+      RangeFilter,
+      SearchFilter,
     },
 
     computed: {
       ...mapGetters({
         filterActive: 'cars/getFilterActive',
         filters: 'cars/getFilters'
-      })
+      }),
+    },
+
+    methods: {
+      ...mapActions({
+        removeFilter: 'cars/removeFilter',
+      }),
     },
 
     data: () => ({
@@ -111,12 +118,6 @@
       milage,
       years
     }),
-
-    methods: {
-      removeFilter (key) {
-        this.$store.dispatch('cars/removeFilter', key)
-      },
-    },
 
     filters: {
 

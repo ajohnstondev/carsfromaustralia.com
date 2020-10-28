@@ -52,7 +52,6 @@
       setMaxValues() {
         let values = this.max
         if (this.minValue > 0) {
-          console.log('', this.minValue)
           values = values.filter( value => value.val > this.minValue )
         }
 
@@ -76,6 +75,7 @@
       clearFilter () {
         this.minValue = null
         this.maxValue = null
+        this.rangeFilter()
       }
     },
     data: () => ({

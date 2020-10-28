@@ -48,21 +48,14 @@
           return this.$store.state.cars.leftFilter
         },
         set(val) {
-
-          if (val) {
-            this.$store.commit('cars/RESET_LEFT_FILTER')
-            this.$store.commit('cars/SET_LEFT_FILTER', val)
-            switch (this.title) {
-              case 'Body Type':
-                this.$store.dispatch('cars/filterCars', { type: 'body_type', value: val })
-                break
-              case 'Make':
-                this.$store.dispatch('cars/filterCars', { type: 'make', value: val })
-                break
-            }
-          } else {
-            this.$store.commit('cars/RESET_LEFT_FILTER')
-            this.$store.dispatch('cars/removeFilter')
+          console.log('set exp filter', val);
+          switch (this.title) {
+            case 'Body Type':
+              this.$store.dispatch('cars/filterCars', { type: 'body_type', value: val })
+              break
+            case 'Make':
+              this.$store.dispatch('cars/filterCars', { type: 'make', value: val })
+              break
           }
         }
       }

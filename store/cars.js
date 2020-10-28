@@ -2,6 +2,7 @@ import  Vue from 'vue'
 
 export const state = () => ({
   cars: [],
+  searchedCars: [],
   filteredCars: [],
   paginatedCars: [],
   currency: 'USD',
@@ -12,7 +13,6 @@ export const state = () => ({
   carPerPage: parseInt(process.env.CAR_PER_PAGE) || 36,
   currentPage: 1,
   totalVisible: 5,
-  filterActive: false,
   filters: {},
   loader: false,
   carDetails: {},
@@ -32,7 +32,7 @@ export const getters = {
   getCarPerPage: state => state.carPerPage,
   getPaginatedCars: state => state.paginatedCars,
   getCurrentPage: state => state.currentPage,
-  getFilterActive: state => state.filterActive,
+  getFilterActive: state => Object.keys(state.filters).length !== 0,
   getFilters: state => state.filters,
   getLoader: state => state.loader,
   getCarDetails: state => state.carDetails,
@@ -49,33 +49,16 @@ export const mutations = {
   SET_CURRENT_PAGE: (state, value) => { state.currentPage = value },
   SET_PAGINATED_CARS: (state, value) => { state.paginatedCars = [...value]},
   SET_FILTERED_CARS: (state, value) => { state.filteredCars = [...value] },
+  SET_SEARCHED_CARS: (state, value) => { state.searchedCars = [...value] },
   SET_FILTERS: (state, value) => {
-    state.filterActive = true
-    if (value.max || value.min) {
-      let show = ''
-      if (value.min && value.max) {
-        show = `${value.min} - ${value.max}`
-      } else if(value.min && !value.max) {
-        show = `>= ${value.min}`
-      } else if (value.max && !value.min) {
-        show = `<= ${value.max}`
-      }
-      state.filters = Object.assign({}, {[value.type]: show })
-    } else {
-      state.filters = Object.assign({}, {[value.type]: value.value })
+    Vue.set(state.filters, value.type, value)
+    if (value.value == '' 
+      || value.value === undefined && value.min === undefined && value.max === undefined 
+      || (value.min === null && value.max === null)) {
+      Vue.delete(state.filters, value.type)
     }
-
   },
 
-  REMOVE_FILTER: (state, value) => {
-    if (Object.keys(state.filters).length === 1) {
-      state.filterActive = false
-    }
-
-    Vue.delete(state.filters, value)
-  },
-
-  SET_FILTER_ACTIVE: (state, value) => { state.filterActive = value },
   SET_LOADER: (state, value) => { state.loader = value },
   SET_CAR_DETAILS: (state, value) => { state.carDetails = value },
   SET_FILTER_LOADER: (state, value) => { state.filterLoader = value },
@@ -90,7 +73,6 @@ export const mutations = {
 export const actions = {
   async fetchCars ({dispatch, commit}) {
     let { data } = await this.$axios.get('https://api.carsfromaustralia.com/api/cars')
-    console.log(data);
     commit('SET_CARS', data)
     commit('SET_TOTAL_CARS', data)
     commit('SET_TOTAL_PAGES', data)
@@ -107,58 +89,82 @@ export const actions = {
     commit('SET_PAGINATED_CARS', newArr)
   },
 
-  async filterCars ({dispatch, commit, state}, value) {
+  async filterCars ({ commit, state }, value) {
     commit('SET_FILTER_LOADER', true)
-    // const filters = state.filters
+    commit('SET_FILTERS', value)
+
+    if (value.type === 'search') {
+      if (value.value.trim() !== '') {
+        const { data } = await this.$axios.get('https://api.carsfromaustralia.com/api/cars?query=' + encodeURI(value.value))
+        await commit('SET_SEARCHED_CARS', data)
+      }
+    }
+    
     let filteredCars = []
-
-
-    if (value.type === 'odometer') {
-      filteredCars = state.cars.filter(car => compare(car[value.type], value.value) )
-    } else if (value.type === 'price') {
-      filteredCars = state.cars.filter( car => comparePrice(car[value.type]['USD'], value.value) )
-    } else if (value.type === 'priceRange') {
-      filteredCars = state.cars.filter( car => {
-        if (value.min && value.max) {
-          return car['price']['USD'] >= value.min && car['price']['USD'] <= value.max
-        } else if (value.min && !value.max) {
-          return car['price']['USD'] >= value.min
-        } else if (!value.min && value.max) {
-          return car['price']['USD'] <= value.max
-        }
-
-      })
-    } else if (value.type === 'milageRange') {
-      filteredCars = state.cars.filter( car => {
-        if (value.min && value.max) {
-          return car['odometer'] >= value.min && car['odometer'] <= value.max
-        } else if (value.min && !value.max) {
-          return car['odometer'] >= value.min
-        } else if (!value.min && value.max) {
-          return car['odometer'] <= value.max
-        }
-
-      })
-    } else if (value.type === 'yearRange') {
-      filteredCars = state.cars.filter( car => {
-        if (value.min && value.max) {
-          return car['year'] >= value.min && car['year'] <= value.max
-        } else if (value.min && !value.max) {
-          return car['year'] >= value.min
-        } else if (!value.min && value.max) {
-          return car['year'] <= value.max
-        }
-
-      })
-    } else if (value.type === 'engine_size') {
-      filteredCars = state.cars.filter( car => compareEngine(car[value.type], value.value) )
-    } else if (value.type === 'year') {
-      filteredCars = state.cars.filter( car => compareUsage(car[value.type], value.value) )
+    if (state.filters.search && state.filters.search.value.trim() !== '') {
+      filteredCars = [...state.searchedCars]
     } else {
-      filteredCars = state.cars.filter(car => car[value.type].toLowerCase() === value.value.toLowerCase() )
+      filteredCars = [...state.cars]
     }
 
-    commit('SET_FILTERS', value)
+    for (const [type, value] of Object.entries(state.filters)) {
+      // Skip search filter for this additiona filters
+      if (type === 'search') continue;
+      switch(type) {
+        case 'odometer': 
+          filteredCars = filteredCars.filter(car => compare(car[value.type], value.value) )
+        break;
+        case 'price': 
+          filteredCars = filteredCars.filter(car => comparePrice(car[value.type]['USD'], value.value) )
+        break;
+        case 'priceRange': 
+          filteredCars = filteredCars.filter(car => {
+            if (value.min && value.max) {
+              return car['price']['USD'] >= value.min && car['price']['USD'] <= value.max
+            } else if (value.min && !value.max) {
+              return car['price']['USD'] >= value.min
+            } else if (!value.min && value.max) {
+              return car['price']['USD'] <= value.max
+            }
+    
+          } )
+        break;
+        case 'milageRange': 
+          filteredCars = filteredCars.filter(car => {
+            if (value.min && value.max) {
+              return car['odometer'] >= value.min && car['odometer'] <= value.max
+            } else if (value.min && !value.max) {
+              return car['odometer'] >= value.min
+            } else if (!value.min && value.max) {
+              return car['odometer'] <= value.max
+            }
+    
+          })
+        break;
+        case 'yearRange': 
+          filteredCars = filteredCars.filter(car => {
+            if (value.min && value.max) {
+              return car['year'] >= value.min && car['year'] <= value.max
+            } else if (value.min && !value.max) {
+              return car['year'] >= value.min
+            } else if (!value.min && value.max) {
+              return car['year'] <= value.max
+            }
+    
+          } )
+        break;
+        case 'engine_size': 
+          filteredCars = filteredCars.filter(car => compareEngine(car[value.type], value.value) )
+        break;
+        case 'year': 
+          filteredCars = filteredCars.filter(car => compareUsage(car[value.type], value.value) )
+        break;
+        default: 
+          filteredCars = state.cars.filter(car => car[value.type].toLowerCase() === value.value.toLowerCase() )
+        break;
+      }
+    }
+    
     commit('SET_FILTERED_CARS', filteredCars)
     commit('SET_TOTAL_FILTERED_CARS', filteredCars)
     commit('SET_TOTAL_FILTERED_PAGES', filteredCars)
@@ -184,7 +190,7 @@ export const actions = {
 
   },
 
-  async removeFilter ({dispatch, commit}, value) {
+  async removeFilter ({dispatch, commit}) {
     commit('SET_FILTER_LOADER', true)
     await commit('RESET_FILTER')
     await commit('RESET_LEFT_FILTER')
@@ -195,7 +201,6 @@ export const actions = {
   reFilter ({commit, state}) {
     let filteredCars = [...state.cars]
     for (const [key, value] of Object.entries(state.filters)) {
-      console.log(key, value)
       if (key === 'odometer') {
         filteredCars = filteredCars.filter( car => compare(car[key], value) )
       } else if (key === 'price') {
